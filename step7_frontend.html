@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenAI Sports Calendar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .search-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .search-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .form-group select,
+        .form-group input {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #64748b;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .tournaments-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .tournaments-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .tournaments-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .tournaments-count {
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .tournament-card {
+            border: 2px solid #f0f0f0;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tournament-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.15);
+        }
+
+        .tournament-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tournament-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+            flex: 1;
+        }
+
+        .confidence-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .confidence-high { background: #10b981; }
+        .confidence-medium { background: #f59e0b; }
+        .confidence-low { background: #ef4444; }
+
+        .tournament-meta {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .meta-icon {
+            font-size: 1.1rem;
+        }
+
+        .tournament-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .detail-item {
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            color: #333;
+        }
+
+        .tournament-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tournament-actions .btn {
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .tournament-actions .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .tournament-actions .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .tournament-actions .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .tournament-actions .btn-secondary:hover {
+            background: #4b5563;
+            transform: translateY(-1px);
+        }
+
+        .deadline-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 8px 0;
+            border: 2px solid;
+        }
+
+        .deadline-normal {
+            background: #e7f5e7;
+            color: #2d6a2d;
+            border-color: #4caf50;
+        }
+
+        .deadline-urgent {
+            background: #fff3cd;
+            color: #856404;
+            border-color: #ffc107;
+            animation: pulse 2s infinite;
+        }
+
+        .deadline-expired {
+            background: #f8d7da;
+            color: #721c24;
+            border-color: #dc3545;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 3px;
+            width: 0%;
+        }
+
+        @keyframes progress-animation {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .search-filters {
+                grid-template-columns: 1fr;
+            }
+
+            .search-buttons {
+                justify-content: center;
+            }
+
+            .tournaments-header {
+                text-align: center;
+            }
+
+            .tournament-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .tournament-meta {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🏆 GenAI Sports Calendar</h1>
+            <p>Discover upcoming sports tournaments powered by AI</p>
+        </div>
+
+        <!-- Search Container -->
+        <div class="search-container">
+            <div class="search-filters">
+                <div class="form-group">
+                    <label for="sportFilter">🏅 Sport</label>
+                    <select id="sportFilter">
+                        <option value="">All Sports</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="levelFilter">🎯 Level</label>
+                    <select id="levelFilter">
+                        <option value="">All Levels</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="confidenceFilter">⭐ Min Confidence</label>
+                    <select id="confidenceFilter">
+                        <option value="">Any Confidence</option>
+                        <option value="0.9">90%+ (Excellent)</option>
+                        <option value="0.8">80%+ (Very Good)</option>
+                        <option value="0.7">70%+ (Good)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="search-buttons">
+                <button class="btn btn-warning" onclick="intelligentSearch()">🤖 Smart Search (Finds New Tournaments)</button>
+                <button class="btn btn-secondary" onclick="clearFilters()">🗑️ Clear Filters</button>
+                <button class="btn btn-success" onclick="loadStats()">📊 Refresh Stats</button>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-container" id="statsContainer">
+            <!-- Stats will be loaded here -->
+        </div>
+
+        <!-- Tournaments Container -->
+        <div class="tournaments-container">
+            <div class="tournaments-header">
+                <h2 class="tournaments-title">🏆 Tournament Results</h2>
+                <div class="tournaments-count" id="tournamentsCount">0 tournaments</div>
+            </div>
+            <div id="tournamentsContainer">
+                <div class="loading">
+                    <p>Loading tournaments...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Base URL
+        const API_BASE = 'http://localhost:8000';
+        
+        // Global variables
+        let tournaments = [];
+        let sports = [];
+        let levels = [];
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadInitialData();
+        });
+
+        // Load initial data
+        async function loadInitialData() {
+            try {
+                await Promise.all([
+                    loadSports(),
+                    loadLevels(),
+                    loadTournaments(),
+                    loadStats()
+                ]);
+            } catch (error) {
+                console.error('Error loading initial data:', error);
+                showError('Failed to load initial data. Please refresh the page.');
+            }
+        }
+
+        // Load sports
+        async function loadSports() {
+            try {
+                const response = await fetch(`${API_BASE}/sports`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    sports = data.data;
+                    populateSportsDropdown();
+                }
+            } catch (error) {
+                console.error('Error loading sports:', error);
+            }
+        }
+
+        // Load levels
+        async function loadLevels() {
+            try {
+                const response = await fetch(`${API_BASE}/levels`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    levels = data.data;
+                    populateLevelsDropdown();
+                }
+            } catch (error) {
+                console.error('Error loading levels:', error);
+            }
+        }
+
+        // Load tournaments
+        async function loadTournaments(params = {}) {
+            try {
+                showLoading();
+                
+                const queryParams = new URLSearchParams();
+                Object.keys(params).forEach(key => {
+                    if (params[key]) queryParams.append(key, params[key]);
+                });
+                
+                const response = await fetch(`${API_BASE}/tournaments?${queryParams}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    tournaments = data.data;
+                    displayTournaments(tournaments);
+                    updateTournamentsCount(data.total_count || tournaments.length);
+                } else {
+                    showError(data.message || 'Failed to load tournaments');
+                }
+            } catch (error) {
+                console.error('Error loading tournaments:', error);
+                showError('Failed to connect to the API. Please check if the server is running.');
+            }
+        }
+
+        // Load statistics
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/statistics`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayStats(data.data);
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Auto-filter tournaments when dropdowns change
+        function autoFilterTournaments() {
+            const sport = document.getElementById('sportFilter').value;
+            const level = document.getElementById('levelFilter').value;
+            const minConfidence = document.getElementById('confidenceFilter').value;
+
+            console.log('Auto-filtering with:', { sport, level, minConfidence });
+
+            const params = {};
+            if (sport) params.sport = sport;
+            if (level) params.level = level;
+            if (minConfidence) params.min_confidence = minConfidence;
+            
+            loadTournaments(params);
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('sportFilter').value = '';
+            document.getElementById('levelFilter').value = '';
+            document.getElementById('confidenceFilter').value = '';
+            autoFilterTournaments();
+        }
+
+        // Populate dropdowns
+        function populateSportsDropdown() {
+            const select = document.getElementById('sportFilter');
+            select.innerHTML = '<option value="">All Sports</option>';
+            
+            sports.forEach(sport => {
+                const option = document.createElement('option');
+                option.value = sport.sport;
+                option.textContent = `${sport.sport} (${sport.tournament_count})`;
+                select.appendChild(option);
+            });
+        }
+
+        function populateLevelsDropdown() {
+            const select = document.getElementById('levelFilter');
+            select.innerHTML = '<option value="">All Levels</option>';
+            
+            levels.forEach(level => {
+                const option = document.createElement('option');
+                option.value = level.level;
+                option.textContent = `${level.level} (${level.tournament_count})`;
+                select.appendChild(option);
+            });
+        }
+
+        // Display functions
+        function displayStats(stats) {
+            const container = document.getElementById('statsContainer');
+            container.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${stats.total_tournaments}</div>
+                    <div class="stat-label">Total Tournaments</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.average_confidence}</div>
+                    <div class="stat-label">Avg Confidence</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${Object.keys(stats.by_sport).length}</div>
+                    <div class="stat-label">Sports Covered</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.recent_tournaments}</div>
+                    <div class="stat-label">Recent Additions</div>
+                </div>
+            `;
+        }
+
+        // Helper function to safely parse JSON
+        function safeJSONParse(jsonString, fallback = []) {
+            try {
+                if (!jsonString) return fallback;
+                if (typeof jsonString !== 'string') return jsonString;
+                return JSON.parse(jsonString);
+            } catch (error) {
+                console.warn('Failed to parse JSON:', jsonString, error);
+                return fallback;
+            }
+        }
+
+        // Extract deadline information from tournament data
+        function extractDeadlineInfo(tournament) {
+            const dateInfo = safeJSONParse(tournament.date_info, []);
+            const summary = tournament.summary || '';
+            const entryFees = tournament.entry_fees || '';
+            
+            let deadlineInfo = {
+                hasDeadline: false,
+                deadlineText: '',
+                urgency: 'normal' // normal, urgent, expired
+            };
+            
+            // Keywords that indicate deadlines
+            const deadlineKeywords = [
+                'registration deadline', 'deadline', 'last date', 'close', 'closes',
+                'registration open', 'register by', 'apply by', 'entries close',
+                'registration end', 'last date to register', 'cutoff date'
+            ];
+            
+            // Check summary for deadline information
+            const summaryLower = summary.toLowerCase();
+            for (let keyword of deadlineKeywords) {
+                if (summaryLower.includes(keyword)) {
+                    deadlineInfo.hasDeadline = true;
+                    
+                    // Try to extract specific date
+                    const datePatterns = [
+                        /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/g, // DD/MM/YYYY or DD-MM-YYYY
+                        /(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/g, // YYYY/MM/DD or YYYY-MM-DD
+                        /(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2}),?\s+(\d{4})/gi,
+                        /(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+(\d{1,2}),?\s+(\d{4})/gi
+                    ];
+                    
+                    for (let pattern of datePatterns) {
+                        const match = summary.match(pattern);
+                        if (match) {
+                            deadlineInfo.deadlineText = match[0];
+                            break;
+                        }
+                    }
+                    
+                    if (!deadlineInfo.deadlineText) {
+                        // Extract sentence containing deadline keyword
+                        const sentences = summary.split(/[.!?]/);
+                        for (let sentence of sentences) {
+                            if (sentence.toLowerCase().includes(keyword)) {
+                                deadlineInfo.deadlineText = sentence.trim();
+                                break;
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+            
+            // Check date_info for "registration open" or deadline information
+            if (!deadlineInfo.hasDeadline && dateInfo.length > 0) {
+                for (let dateStr of dateInfo) {
+                    if (typeof dateStr === 'string') {
+                        const dateStrLower = dateStr.toLowerCase();
+                        if (dateStrLower.includes('registration') || 
+                            dateStrLower.includes('deadline') ||
+                            dateStrLower.includes('open') ||
+                            dateStrLower.includes('close')) {
+                            deadlineInfo.hasDeadline = true;
+                            deadlineInfo.deadlineText = dateStr;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // If no specific deadline found, check if registration is mentioned as open
+            if (!deadlineInfo.hasDeadline) {
+                if (summaryLower.includes('registration open') || 
+                    summaryLower.includes('registration is open') ||
+                    summaryLower.includes('register online') ||
+                    summaryLower.includes('apply now')) {
+                    deadlineInfo.hasDeadline = true;
+                    deadlineInfo.deadlineText = 'Registration Currently Open';
+                    deadlineInfo.urgency = 'normal';
+                } else if (tournament.link && tournament.link.trim() !== '') {
+                    // If there's a registration link, assume registration is open
+                    deadlineInfo.hasDeadline = true;
+                    deadlineInfo.deadlineText = 'Registration Available';
+                    deadlineInfo.urgency = 'normal';
+                }
+            }
+            
+            // Determine urgency based on text content
+            if (deadlineInfo.deadlineText) {
+                const urgentKeywords = ['urgent', 'immediate', 'soon', 'limited', 'few days', 'this week'];
+                const expiredKeywords = ['closed', 'ended', 'expired', 'past'];
+                
+                const textLower = deadlineInfo.deadlineText.toLowerCase();
+                if (expiredKeywords.some(keyword => textLower.includes(keyword))) {
+                    deadlineInfo.urgency = 'expired';
+                } else if (urgentKeywords.some(keyword => textLower.includes(keyword))) {
+                    deadlineInfo.urgency = 'urgent';
+                }
+            }
+            
+            return deadlineInfo;
+        }
+        function filterCurrentTournaments(tournaments) {
+            const currentYear = new Date().getFullYear();
+            
+            return tournaments.filter(tournament => {
+                const dateInfo = safeJSONParse(tournament.date_info, []);
+                
+                // If no date info, include it (might be upcoming)
+                if (!dateInfo || dateInfo.length === 0) {
+                    return true;
+                }
+                
+                // Check if any date contains current year or future years
+                for (let dateStr of dateInfo) {
+                    if (typeof dateStr === 'string') {
+                        // Check for current year (2025) or future years
+                        if (dateStr.includes(currentYear.toString()) || 
+                            dateStr.includes((currentYear + 1).toString()) ||
+                            dateStr.toLowerCase().includes('tbd') ||
+                            dateStr.toLowerCase().includes('upcoming') ||
+                            dateStr.toLowerCase().includes('soon')) {
+                            return true;
+                        }
+                        
+                        // Check for specific future years
+                        const yearMatch = dateStr.match(/20(\d{2})/);
+                        if (yearMatch) {
+                            const year = parseInt('20' + yearMatch[1]);
+                            if (year >= currentYear) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                
+                return false; // If no future dates found, exclude
+            });
+        }
+
+        function displayTournaments(tournaments) {
+            const container = document.getElementById('tournamentsContainer');
+            
+            // Filter to show only current/future tournaments
+            const filteredTournaments = filterCurrentTournaments(tournaments);
+            
+            if (filteredTournaments.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🏆</div>
+                        <h3>No current or upcoming tournaments found</h3>
+                        <p>Try using Smart Search to find new tournaments for your selected sport and level.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filteredTournaments.map(tournament => {
+                // Handle data that comes as arrays from API
+                const dateInfo = Array.isArray(tournament.date_info) ? tournament.date_info : [];
+                const venue = Array.isArray(tournament.venue) ? tournament.venue : [];
+                const eligibility = Array.isArray(tournament.eligibility) ? tournament.eligibility : [];
+                const prizes = Array.isArray(tournament.prizes) ? tournament.prizes : [];
+                
+                // Extract deadline information
+                const registrationDeadline = tournament.registration_deadline || '';
+                
+                // Determine deadline status
+                let deadlineClass = 'deadline-normal';
+                let deadlineText = '';
+                
+                if (registrationDeadline) {
+                    deadlineText = `Registration Deadline: ${registrationDeadline}`;
+                    
+                    // Simple urgency check based on keywords
+                    const deadlineStr = registrationDeadline.toLowerCase();
+                    if (deadlineStr.includes('today') || deadlineStr.includes('tomorrow') || 
+                        deadlineStr.includes('urgent') || deadlineStr.includes('soon')) {
+                        deadlineClass = 'deadline-urgent';
+                    } else if (deadlineStr.includes('closed') || deadlineStr.includes('expired') || 
+                              deadlineStr.includes('ended')) {
+                        deadlineClass = 'deadline-expired';
+                    }
+                }
+                
+                return `
+                <div class="tournament-card">
+                    <div class="tournament-header">
+                        <div class="tournament-title">${tournament.name}</div>
+                        <div class="confidence-badge ${getConfidenceClass(tournament.confidence_score)}">
+                            ${Math.round(tournament.confidence_score * 100)}% Confidence
+                        </div>
+                    </div>
+                    
+                    <div class="tournament-meta">
+                        <div class="meta-item">
+                            <span class="meta-icon">🏅</span>
+                            <span><strong>Sport:</strong> ${tournament.sport}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-icon">🎯</span>
+                            <span><strong>Level:</strong> ${tournament.level}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-icon">�</span>
+                            <span><strong>Posted:</strong> ${new Date(tournament.created_at).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+
+                    ${registrationDeadline ? `<div class="deadline-badge ${deadlineClass}">${deadlineText}</div>` : ''}
+
+                    <div class="tournament-details">
+                        ${dateInfo.length > 0 ? `
+                            <div class="detail-item">
+                                <div class="detail-label">�️ Tournament Date</div>
+                                <div class="detail-value">${dateInfo.join(', ')}</div>
+                            </div>
+                        ` : ''}
+                        
+                        ${venue.length > 0 ? `
+                            <div class="detail-item">
+                                <div class="detail-label">📍 Venue</div>
+                                <div class="detail-value">${venue.join(', ')}</div>
+                            </div>
+                        ` : ''}
+                        
+                        ${tournament.entry_fees ? `
+                            <div class="detail-item">
+                                <div class="detail-label">💰 Entry Fees</div>
+                                <div class="detail-value">${tournament.entry_fees}</div>
+                            </div>
+                        ` : ''}
+                        
+                        ${eligibility.length > 0 ? `
+                            <div class="detail-item">
+                                <div class="detail-label">✅ Eligibility</div>
+                                <div class="detail-value">${eligibility.join(', ')}</div>
+                            </div>
+                        ` : ''}
+                        
+                        ${prizes.length > 0 ? `
+                            <div class="detail-item">
+                                <div class="detail-label">🏆 Prizes</div>
+                                <div class="detail-value">${prizes.join(', ')}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="tournament-actions">
+                        ${tournament.link ? `
+                            <a href="${tournament.link}" target="_blank" class="btn btn-primary">
+                                🔗 Register / More Info
+                            </a>
+                        ` : ''}
+                        ${tournament.source_url ? `
+                            <a href="${tournament.source_url}" target="_blank" class="btn btn-secondary">
+                                📄 Source
+                            </a>
+                        ` : ''}
+                    </div>
+                </div>
+                `;
+            }).join('');
+            
+            // Update count with filtered tournaments
+            updateTournamentsCount(filteredTournaments.length);
+        }
+
+        // Intelligent search function
+        async function intelligentSearch() {
+            const sport = document.getElementById('sportFilter').value;
+            const level = document.getElementById('levelFilter').value;
+
+            if (!sport || !level) {
+                showError('Please select both sport and level for intelligent search');
+                return;
+            }
+
+            try {
+                showLoading();
+                
+                // Show pipeline progress message
+                document.getElementById('tournamentsContainer').innerHTML = `
+                    <div class="loading">
+                        <h3>🤖 Intelligent Search in Progress</h3>
+                        <p>📋 Checking database for ${sport} - ${level} tournaments...</p>
+                        <p>⏳ If no data exists, the complete pipeline will run automatically</p>
+                        <div style="margin-top: 20px;">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="animation: progress-animation 3s infinite;"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const searchUrl = `${API_BASE}/tournaments/intelligent-search?sport=${encodeURIComponent(sport)}&level=${encodeURIComponent(level)}`;
+                console.log('Intelligent search URL:', searchUrl);
+
+                const response = await fetch(searchUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('API Response Error:', response.status, errorText);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('Intelligent search response:', data);
+
+                if (data.success) {
+                    tournaments = data.data;
+                    
+                    try {
+                        displayTournaments(tournaments);
+                        updateTournamentsCount(data.total_count || tournaments.length);
+                    } catch (displayError) {
+                        console.error('Error displaying tournaments:', displayError);
+                        showError(`Failed to display tournaments: ${displayError.message}`);
+                        return;
+                    }
+
+                    // Show success message with source info
+                    const sourceInfo = data.metadata?.source === 'pipeline' ? 
+                        '🚀 New data fetched via pipeline!' : 
+                        '💾 Data retrieved from database';
+                    
+                    const statsInfo = data.metadata?.pipeline_stats ? 
+                        `\nPipeline Stats: ${JSON.stringify(data.metadata.pipeline_stats, null, 2)}` : '';
+
+                    setTimeout(() => {
+                        alert(`${sourceInfo}\nFound ${tournaments.length} tournaments for ${sport} - ${level}${statsInfo}`);
+                    }, 500);
+
+                } else {
+                    showError(data.message || 'Intelligent search failed');
+                }
+
+            } catch (error) {
+                console.error('Intelligent search error:', error);
+                showError(`Intelligent search failed: ${error.message}`);
+            }
+        }
+
+        // Helper functions
+        function getConfidenceClass(score) {
+            if (score >= 0.8) return 'confidence-high';
+            if (score >= 0.6) return 'confidence-medium';
+            return 'confidence-low';
+        }
+
+        function showLoading() {
+            document.getElementById('tournamentsContainer').innerHTML = `
+                <div class="loading">
+                    <p>🔄 Loading tournaments...</p>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            document.getElementById('tournamentsContainer').innerHTML = `
+                <div class="error">
+                    <strong>❌ Error:</strong> ${message}
+                </div>
+            `;
+        }
+
+        function updateTournamentsCount(count) {
+            document.getElementById('tournamentsCount').textContent = 
+                `${count} tournament${count !== 1 ? 's' : ''}`;
+        }
+
+        // Add auto-filtering when dropdowns change
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listeners to filter dropdowns
+            document.getElementById('sportFilter').addEventListener('change', autoFilterTournaments);
+            document.getElementById('levelFilter').addEventListener('change', autoFilterTournaments);
+            document.getElementById('confidenceFilter').addEventListener('change', autoFilterTournaments);
+        });
+    </script>
+</body>
+</html>

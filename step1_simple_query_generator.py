@@ -1,6 +1,6 @@
 """
 Simple Query Generator for Tournament Calendar - Step 1
-Generates exactly 3 queries per sport-level combination with LLM enhancement.
+Updated to cover comprehensive sports and levels including local tournaments.
 """
 
 import json
@@ -8,43 +8,63 @@ import os
 from typing import List, Dict
 from openai import OpenAI
 from dotenv import load_dotenv
+from config import SPORTS_LIST, LEVELS_LIST, LOCAL_LEVELS_LIST
 
 # Load environment variables
 load_dotenv()
 
 class SimpleQueryGenerator:
     def __init__(self):
-        # Simple sports and levels list
-        self.sports = ["Cricket", "Football", "Basketball", "Tennis", "Badminton"]
-        self.levels = ["School", "College", "Club", "State", "National"]
+        # Updated comprehensive sports and levels list
+        self.sports = SPORTS_LIST
+        self.levels = LEVELS_LIST + LOCAL_LEVELS_LIST  # Combine regular and local levels
         
-        # Only 3 simple templates per sport-level combination
+        # Regular tournament templates
         self.templates = [
-            "{sport} tournament {level} India 2025",
-            "{sport} championship {level} 2025 registration",
-            "India {sport} {level} competition 2025 schedule"
+            "{sport} tournament {level} India 2025 registration",
+            "{sport} championship {level} 2025 official schedule",
+            "India {sport} {level} competition 2025 venues dates"
+        ]
+        
+        # Local tournament specific templates
+        self.local_templates = [
+            "{sport} local {level} tournament India 2025",
+            "India {level} {sport} community competition 2025",
+            "{level} level {sport} tournament India cities 2025"
         ]
         
         # Initialize OpenAI client
         self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
     
     def step1_generate_base_queries(self) -> List[Dict]:
-        """Step 1: Generate base queries (exactly 3 per sport-level combo)"""
-        print("Step 1: Generating base queries...")
+        """Step 1: Generate base queries with local tournament support"""
+        print("Step 1: Generating comprehensive base queries...")
         queries = []
         
         for sport in self.sports:
             for level in self.levels:
-                for template in self.templates:
+                # Choose appropriate templates based on level type
+                if level in LOCAL_LEVELS_LIST:
+                    selected_templates = self.local_templates
+                    template_type = "local"
+                else:
+                    selected_templates = self.templates
+                    template_type = "regular"
+                
+                # Generate 3 queries per sport-level combination
+                for template in selected_templates:
                     query = template.format(sport=sport, level=level)
                     queries.append({
                         "sport": sport,
                         "level": level,
                         "query": query,
-                        "source": "template"
+                        "source": "template",
+                        "template_type": template_type
                     })
         
-        print(f"Generated {len(queries)} base queries")
+        print(f"Generated {len(queries)} base queries for {len(self.sports)} sports and {len(self.levels)} levels")
+        print(f"Coverage: {len([q for q in queries if q['template_type'] == 'local'])} local tournament queries")
+        print(f"Coverage: {len([q for q in queries if q['template_type'] == 'regular'])} regular tournament queries")
         return queries
     
     def step2_enhance_with_llm(self, base_queries: List[Dict]) -> List[Dict]:

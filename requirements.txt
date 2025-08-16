@@ -2,3 +2,6 @@ python-dotenv
 requests
 firecrawl
 openai
+mysql-connector-python
+fastapi
+uvicorn

@@ -1,5 +1,91 @@
 # Byte-compiled / optimized / DLL files
+# Environment variables and secrets
+.env
+.env.local
+.env.production
+*.key
+
+# Generated data files (created by pipeline)
+scraped_content.json
+search_results.json
+tournament_data.json
+simple_queries.json
+test_firecrawl_summary.json
+
+# Development and maintenance utilities
+add_registration_deadline_field.py
+check_tournament_fields.py
+check_deadline_info.py
+check_json_validity.py
+check_db_structure.py
+fix_database.py
+fix_json_format.py
+test_api_format.py
+test_firecrawl.py
+test_openai.py
+test_serper.py
+test_level_filtering.py
+view_database.py
+
+# Python cache and virtual environment
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+.pytest_cache/
+
+# Database files (if using SQLite locally)
+*.db
+*.sqlite
+*.sqlite3
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg/
 *.py[cod]
 *$py.class
 

@@ -303,7 +303,7 @@ def main():
     collector = SearchResultsCollector()
     
     # Run with limited queries for testing
-    results = collector.run_complete_search(query_limit=15)  # Test with 15 queries
+    results = collector.run_complete_search(query_limit=5)  # Test with 5 queries
     
     # Display sample results
     if results:
