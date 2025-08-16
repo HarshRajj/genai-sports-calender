@@ -35,6 +35,55 @@ class TournamentExtractor:
             print(f"❌ Error loading scraped content: {e}")
             return None
     
+    def _extract_relevant_content(self, content: str, max_length: int = 8000) -> str:
+        """Extract the most relevant parts of content for tournament extraction"""
+        if len(content) <= max_length:
+            return content
+        
+        # Keywords that indicate tournament information
+        tournament_keywords = [
+            'tournament', 'championship', 'competition', 'league', 'cup', 'open',
+            'registration', 'entry', 'participate', 'eligibility', 'venue', 'date',
+            'prize', 'award', 'fee', 'contact', 'schedule', 'format', 'rules'
+        ]
+        
+        # Split content into paragraphs
+        paragraphs = content.split('\n')
+        
+        # Score paragraphs based on keyword relevance
+        scored_paragraphs = []
+        for para in paragraphs:
+            if len(para.strip()) < 20:  # Skip very short paragraphs
+                continue
+                
+            score = 0
+            para_lower = para.lower()
+            for keyword in tournament_keywords:
+                score += para_lower.count(keyword)
+            
+            scored_paragraphs.append((score, para))
+        
+        # Sort by score and take the most relevant paragraphs
+        scored_paragraphs.sort(key=lambda x: x[0], reverse=True)
+        
+        # Build content from highest scoring paragraphs until we reach max_length
+        selected_content = []
+        current_length = 0
+        
+        for score, para in scored_paragraphs:
+            if current_length + len(para) > max_length:
+                break
+            selected_content.append(para)
+            current_length += len(para)
+        
+        result = '\n'.join(selected_content)
+        if len(result) < max_length // 2:  # If we got too little content, add some from the beginning
+            remaining_space = max_length - len(result)
+            beginning_content = content[:remaining_space]
+            result = beginning_content + '\n' + result
+        
+        return result[:max_length]
+
     def extract_tournaments_with_llm(self, content: Dict) -> List[Dict]:
         """Extract tournament data using LLM with confidence scoring"""
         print("🤖 Extracting tournament data with LLM...")
@@ -45,65 +94,62 @@ class TournamentExtractor:
         title = tournament_info.get('title', '')
         url = tournament_info.get('url', '')
         
-        # Create comprehensive prompt
-        prompt = f"""
-        Extract tournament information from the following content. For each tournament found, provide a confidence score (0.0-1.0) based on how certain you are about the information.
+        # Extract relevant content intelligently to avoid token limit
+        max_content_length = 6000  # Conservative limit for content
+        relevant_content = self._extract_relevant_content(raw_content, max_content_length)
+        
+        print(f"📝 Content reduced from {len(raw_content)} to {len(relevant_content)} characters")
+        
+        # Create simple prompt for better JSON response
+        prompt = f"""Extract tournament details from this content. Return only valid JSON.
 
-        Content Title: {title}
-        URL: {url}
-        Content: {raw_content}
+Content: {relevant_content}
 
-        Extract the following information for each tournament:
-        - name: Tournament name
-        - date: Tournament dates (start and end if available)
-        - level: Competition level (School/College/State/National/International/Professional/Club)
-        - venue: Location/venue details
-        - link: Registration or official website link
-        - streaming_links: Live streaming or broadcast links
-        - summary: Brief tournament description
-        - entry_fees: Entry fee information
-        - contact_information: Contact details (email, phone)
-        - eligibility: Who can participate
-        - prizes: Prize money or awards
-        - confidence_score: Your confidence in this information (0.0-1.0)
+Find tournaments and return JSON array with format:
+[{{"name": "Tournament Name", "tournament_date": "Date", "registration_deadline": "Deadline", "level": "Level", "venue": "Venue", "summary": "Description", "confidence_score": 0.8}}]
 
-        Return ONLY a valid JSON array like this:
-        [
-            {{
-                "name": "Tournament Name",
-                "date": "Date information",
-                "level": "Competition level",
-                "venue": "Venue details",
-                "link": "Website link",
-                "streaming_links": "Streaming info",
-                "summary": "Brief description",
-                "entry_fees": "Fee information",
-                "contact_information": "Contact details",
-                "eligibility": "Eligibility criteria",
-                "prizes": "Prize information",
-                "confidence_score": 0.85
-            }}
-        ]
+Look for registration deadlines with keywords: deadline, last date, closing date, apply by, registration closes.
 
-        If no clear tournament information is found, return an empty array [].
-        """
+Return only JSON array or [] if no tournaments found."""
         
         try:
             response = self.client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.3,
-                max_tokens=2000
+                temperature=0.1,  # Lower temperature for more consistent JSON
+                max_tokens=1500   # Increased for more detailed responses
             )
             
             # Parse LLM response
             llm_response = response.choices[0].message.content.strip()
+            print(f"🔍 LLM Response length: {len(llm_response)} characters")
+            print(f"📄 LLM Response: '{llm_response}'")  # Debug: show actual response
             
             # Clean JSON response
             if llm_response.startswith('```json'):
                 llm_response = llm_response.replace('```json', '').replace('```', '').strip()
+            elif llm_response.startswith('```'):
+                llm_response = llm_response.replace('```', '').strip()
             
-            tournaments = json.loads(llm_response)
+            # Try to find JSON array in the response
+            start_idx = llm_response.find('[')
+            end_idx = llm_response.rfind(']')
+            
+            if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                json_str = llm_response[start_idx:end_idx + 1]
+            else:
+                json_str = llm_response
+            
+            # Attempt to fix common JSON issues
+            json_str = self._fix_json_string(json_str)
+            
+            try:
+                tournaments = json.loads(json_str)
+            except json.JSONDecodeError as e:
+                print(f"⚠️ JSON parse error: {e}")
+                print(f"📄 Problematic JSON snippet: {json_str[:500]}...")
+                # Try to extract any valid tournament info manually
+                tournaments = self._fallback_parse(llm_response)
             
             if not isinstance(tournaments, list):
                 tournaments = [tournaments] if tournaments else []
@@ -115,6 +161,59 @@ class TournamentExtractor:
             print(f"❌ Error extracting tournaments with LLM: {e}")
             return []
     
+    def _fix_json_string(self, json_str: str) -> str:
+        """Attempt to fix common JSON formatting issues"""
+        # Remove any trailing commas before closing brackets
+        json_str = json_str.replace(',]', ']').replace(',}', '}')
+        
+        # Try to fix unterminated strings by finding unmatched quotes
+        lines = json_str.split('\n')
+        fixed_lines = []
+        
+        for line in lines:
+            # Count quotes in the line
+            quote_count = line.count('"')
+            if quote_count % 2 != 0:  # Odd number of quotes indicates unterminated string
+                # Try to close the string
+                if line.rstrip().endswith(','):
+                    line = line.rstrip()[:-1] + '",'
+                else:
+                    line = line.rstrip() + '"'
+            fixed_lines.append(line)
+        
+        return '\n'.join(fixed_lines)
+    
+    def _fallback_parse(self, response: str) -> List[Dict]:
+        """Fallback parsing when JSON parsing fails"""
+        print("🔧 Attempting fallback parsing...")
+        
+        # Simple extraction based on keywords
+        tournaments = []
+        
+        # Look for tournament names (very basic extraction)
+        import re
+        
+        # Try to find tournament names
+        name_patterns = [
+            r'["\']name["\']:\s*["\']([^"\']+)["\']',
+            r'Tournament[:\s]+([^\n,]+)',
+            r'Championship[:\s]+([^\n,]+)'
+        ]
+        
+        for pattern in name_patterns:
+            matches = re.findall(pattern, response, re.IGNORECASE)
+            for match in matches:
+                if len(match.strip()) > 3:  # Basic validation
+                    tournaments.append({
+                        "name": match.strip(),
+                        "confidence_score": 0.5,  # Low confidence for fallback
+                        "summary": "Extracted via fallback parsing"
+                    })
+                    break  # Only take the first valid match
+        
+        print(f"🔧 Fallback extracted {len(tournaments)} tournaments")
+        return tournaments
+
     def enhance_tournament_data(self, tournaments: List[Dict], context: Dict) -> List[Dict]:
         """Enhance tournament data with context information"""
         print("🔧 Enhancing tournament data...")
@@ -125,6 +224,11 @@ class TournamentExtractor:
         for tournament in tournaments:
             # Add context information
             enhanced_tournament = tournament.copy()
+            
+            # Map new field names to existing database schema
+            if 'tournament_date' in enhanced_tournament:
+                enhanced_tournament['date'] = enhanced_tournament.pop('tournament_date')
+            
             enhanced_tournament.update({
                 'source_url': search_context.get('original_query', ''),
                 'source_sport': search_context.get('sport', ''),

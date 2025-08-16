@@ -3,23 +3,52 @@ Configuration file for GenAI Sports Calendar
 Contains all sports and competition levels covered by the system.
 """
 
-# Sports covered by the system
+"""
+Configuration file for GenAI Sports Calendar
+Contains all sports and competition levels covered by the system.
+"""
+
+# Sports covered by the system (Updated comprehensive list)
 SPORTS_LIST = [
     "Cricket",
     "Football", 
+    "Badminton",
+    "Running",
+    "Gym",
+    "Cycling",
+    "Swimming",
+    "Kabaddi",
+    "Yoga",
     "Basketball",
-    "Tennis",
-    "Badminton"
+    "Chess",
+    "Table Tennis"
 ]
 
-# Competition levels supported
+# Competition levels supported (Updated comprehensive list)
 LEVELS_LIST = [
+    "Corporate",
     "School",
-    "College", 
+    "College/University",
+    "Club/Academy", 
+    "District",
     "State",
+    "Zonal/Regional",
     "National",
-    "International",
-    "Professional"
+    "International"
+]
+
+# Local tournament specific levels for better coverage
+LOCAL_LEVELS_LIST = [
+    "Local",
+    "Community",
+    "Residential",
+    "Municipal",
+    "City",
+    "Inter-Club",
+    "Inter-School",
+    "Inter-College",
+    "Neighborhood",
+    "Society"
 ]
 
 # API Configuration
