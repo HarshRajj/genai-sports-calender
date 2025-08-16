@@ -21,11 +21,11 @@ import sys
 sys.path.append('.')
 
 # Import pipeline components
-from step1_simple_query_generator import SimpleQueryGenerator
-from step2_search_results import SearchResultsCollector  
-from step3_content_scraper import ContentScraper
-from step4_tournament_extractor import TournamentExtractor
-from step5_database_storage import TournamentDatabase
+from query_generator import SimpleQueryGenerator
+from search_results import SearchResultsCollector  
+from content_scraper import ContentScraper
+from tournament_extractor import TournamentExtractor
+from database_storage import TournamentDatabase
 
 # Load environment variables
 load_dotenv()
@@ -857,7 +857,7 @@ def process_tournament_data(tournament):
 @app.get("/frontend")
 async def serve_frontend():
     """Serve the frontend HTML file"""
-    return FileResponse("step7_frontend.html")
+    return FileResponse("index.html")
 
 @app.get("/health")
 async def health_check():
@@ -883,15 +883,35 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
+    import threading
+    import webbrowser
+    import time
     print("🚀 Starting GenAI Sports Calendar API...")
     print("📋 API Documentation: http://localhost:8000/docs")
     print("🔍 Alternative Docs: http://localhost:8000/redoc")
     print("💻 API Base URL: http://localhost:8000")
-    
-    uvicorn.run(
-        "step6_api_endpoints:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True,
-        log_level="info"
-    )
+
+    def start_server():
+        uvicorn.run(
+            "main:app",
+            host="0.0.0.0",
+            port=8000,
+            reload=False,  # Disable reload in thread to avoid signal errors
+            log_level="info"
+        )
+
+    # Start the server in a separate thread
+    server_thread = threading.Thread(target=start_server, daemon=True)
+    server_thread.start()
+
+    # Wait a moment for the server to start
+    time.sleep(2)
+    # Open the frontend in the default browser
+    webbrowser.open_new_tab("http://localhost:8000/frontend")
+
+    # Keep the main thread alive while the server is running
+    try:
+        while server_thread.is_alive():
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("\nShutting down...")

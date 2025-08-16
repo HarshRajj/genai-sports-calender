@@ -1,4 +1,4 @@
-from step5_database_storage import TournamentDatabase
+from database_storage import TournamentDatabase
 import json
 
 def add_sample_tournament_data():

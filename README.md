@@ -113,36 +113,37 @@ CREATE DATABASE sports_calendar;
 python run_pipeline.py
 ```
 
+
 #### Option 2: Individual Steps
 ```bash
 # Generate search queries
-python step1_simple_query_generator.py
+python query_generator.py
 
-# Search for tournament websites  
-python step2_search_results.py
+# Search for tournament websites
+python search_results.py
 
 # Scrape content from websites
-python step3_content_scraper.py
+python content_scraper.py
 
 # Extract tournament data with AI
-python step4_tournament_extractor.py
+python tournament_extractor.py
 
 # Store in database
-python step5_database_storage.py
+python database_storage.py
 
 # Start API server
-python step6_api_endpoints.py
+python main.py
 
-# Open step7_frontend.html in browser
+# Open index.html in browser (or it will open automatically when running main.py)
 ```
+
 
 #### Option 3: API + Frontend Only
 ```bash
 # Start the API server
-python step6_api_endpoints.py
+python main.py
 
-# Open the frontend in browser
-# Navigate to step7_frontend.html
+# The frontend (index.html) will open automatically in your browser, or you can open it manually.
 ```
 
 ## 📊 API Documentation
@@ -266,17 +267,18 @@ LEVELS_LIST = [
 ### Project Structure
 ```
 genai-sports-calender/
-├── step1_simple_query_generator.py  # Query generation
-├── step2_search_results.py          # Web search
-├── step3_content_scraper.py         # Content scraping
-├── step4_tournament_extractor.py    # AI extraction
-├── step5_database_storage.py        # Data storage
-├── step6_api_endpoints.py           # REST API
-├── step7_frontend.html              # Web interface
-├── run_pipeline.py                  # Pipeline orchestrator
-├── config.py                        # Configuration
-├── requirements.txt                 # Dependencies
-└── README.md                        # Documentation
+├── query_generator.py         # Query generation
+├── search_results.py          # Web search
+├── content_scraper.py         # Content scraping
+├── tournament_extractor.py    # AI extraction
+├── database_storage.py        # Data storage
+├── main.py                    # REST API (FastAPI)
+├── index.html                 # Web interface (frontend)
+├── run_pipeline.py            # Pipeline orchestrator
+├── config.py                  # Configuration
+├── requirements.txt           # Dependencies
+├── README.md                  # Documentation
+└── ... (other files)
 ```
 
 ### Technology Stack
