@@ -1,0 +1,8 @@
+Step 1 : generate queries to search for the particular sport-level combination 
+step 2 : search the generated queries via serper to get url and title of different web pages
+step 3 : scrape the pages to get meaningful information from these pages
+step 4 : now, main work of LLM, to get the information by scraper(firecrawl) and use that information
+         to find tournaments and generate tournament calender
+Step 5 : the output of LLM is to be stored in the Database (MySQL)
+step 6 : API and endpoints integration (FastAPI)
+Step 7 : Frontend integration 
